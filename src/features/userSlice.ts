@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../app/store";
 
+// useSliceはsore.tsで使う
 export const userSlice = createSlice({
   name: "user",
   initialState: {
@@ -18,6 +19,7 @@ export const userSlice = createSlice({
 
 export const { login, logout } = userSlice.actions;
 
+// selectUserはApp.tsxで使う
 // store.ts のreducerのkey と state."user".user の"user"が一致している必要がある！！
 export const selectUser = (state: RootState) => state.user.user;
 
