@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import "./App.module.css";
+import styles from "./App.module.css";
 import { useSelector, useDispatch } from "react-redux";
 import { login, logout, selectUser } from "./features/userSlice";
 import { auth } from "./firebase";
@@ -32,7 +32,7 @@ const App: React.FC = () => {
   return (
     <>
       {user.uid ? (
-        <div className="styles.app">
+        <div className={styles.app}>
           <Feed />
         </div>
       ) : (
