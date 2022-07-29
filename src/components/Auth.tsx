@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { auth, provider, storage } from "../firebase";
+import { updateUserProfile } from "../features/userSlice";
+
 import styles from "./Auth.module.css";
 
 import Avatar from "@mui/material/Avatar";
@@ -14,19 +16,62 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import MailIcon from "@mui/icons-material/Mail";
-
+import { IconButton } from "@mui/material";
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 const theme = createTheme();
 
 const Auth: React.FC = () => {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+
+  const [username, setUsername] = useState("");
+  // JSのFileオブジェクト
+  const [avatarImage, setAvatarImage] = useState<File | null>(null);
+
+  const onChangeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // [0] .. 画像1枚だけ取得！
+    //  .. ! は  TS の Non-null assertion operator
+    // TSのコンパイラに null または undefined ではありませんよ！と通知する！
+    if (e.target.files![0]) {
+      setAvatarImage(e.target.files![0]);
+      // 連続して同じファイルを選択するとonChangeは反応しない→動かしたい!!
+      e.target.value = "";
+    }
+  };
 
   const signInEmail = async () => {
     await auth.signInWithEmailAndPassword(email, password);
   };
   const signUpEmail = async () => {
-    await auth.createUserWithEmailAndPassword(email, password);
+    const authUser = await auth.createUserWithEmailAndPassword(email, password);
+    let url = "";
+    if (avatarImage) {
+      // firebaseの仕様で同じファイル名のものをアップロードすると前のやつが削除される→ユニークなファイル名を作成
+      const S =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      // 生成したいランダムな文字数
+      const N = 16;
+      // randomな16桁の文字
+      const randomChar = Array.from(crypto.getRandomValues(new Uint32Array(N)))
+        .map((n) => S[n % S.length])
+        .join("");
+      const fileName = randomChar + "_" + avatarImage.name;
+      await storage.ref(`avatars/${fileName}`).put(avatarImage);
+      url = await storage.ref("avatars").child(fileName).getDownloadURL();
+    }
+    await authUser.user?.updateProfile({
+      displayName: username,
+      photoURL: url,
+    });
+
+    dispatch(
+      updateUserProfile({
+        displayName: username,
+        photoUrl: url,
+      })
+    );
   };
 
   const signInGoogle = async () => {
@@ -86,6 +131,44 @@ const Auth: React.FC = () => {
               onSubmit={handleSubmit}
               sx={{ mt: 1 }}
             >
+              {!isLogin && (
+                <>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="username"
+                    label="username"
+                    type="username"
+                    id="username"
+                    autoComplete="current-username"
+                    value={username}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      setUsername(event.target.value)
+                    }
+                  />
+                  <Box textAlign="center">
+                    <IconButton>
+                      {/* labelで囲うとクリック時、Fileのダイアログが表示される */}
+                      <label>
+                        <SupervisorAccountIcon
+                          fontSize="large"
+                          className={
+                            avatarImage
+                              ? styles.login_addIconLoaded
+                              : styles.login_addIcon
+                          }
+                        />
+                        <input
+                          type="file"
+                          className={styles.login_hiddenIcon}
+                          onChange={onChangeImageHandler}
+                        />
+                      </label>
+                    </IconButton>
+                  </Box>
+                </>
+              )}
               <TextField
                 margin="normal"
                 required
@@ -115,6 +198,12 @@ const Auth: React.FC = () => {
                 }
               />
               <Button
+                disabled={
+                  // loginモードとresisterモードで条件を分ける
+                  isLogin
+                    ? !email || password.length < 6
+                    : !username || !email || password.length < 6 || !avatarImage
+                }
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
@@ -144,7 +233,7 @@ const Auth: React.FC = () => {
                 <Grid item xs>
                   <span className={styles.login_reset}>Forgot Password</span>
                 </Grid>
-                <Grid item xs>
+                <Grid item>
                   <span
                     className={styles.login_toggleMode}
                     onClick={() => setIsLogin(!isLogin)}
