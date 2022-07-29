@@ -16,11 +16,66 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import MailIcon from "@mui/icons-material/Mail";
-import { IconButton } from "@mui/material";
+import { IconButton, makeStyles, Modal } from "@mui/material";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
+import SendIcon from "@mui/icons-material/Send";
+
+const getModalStyle = () => {
+  const top = 50;
+  const left = 50;
+  return {
+    top: `${top}%`,
+    left: `${left}%`,
+    transform: `translate(-${top}%, -${left}%`,
+  };
+};
 const theme = createTheme();
 
+const useStyles = makeStyles((theme: any) => ({
+  root: {
+    height: "100vh",
+  },
+  modal: {
+    outline: "none",
+    position: "absolute",
+    width: 400,
+    borderRadius: 10,
+    backgroundColor: "white",
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(10),
+  },
+  image: {
+    backgroundImage:
+      "url(https://images.unsplash.com/photo-1581784368651-8916092072cf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=934&q=80)",
+    backgroundRepeat: "no-repeat",
+    backgroundColor:
+      theme.palette.type === "light"
+        ? theme.palette.grey[50]
+        : theme.palette.grey[900],
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  },
+  paper: {
+    margin: theme.spacing(8, 4),
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  avatar: {
+    margin: theme.spacing(1),
+    backgroundColor: theme.palette.secondary.main,
+  },
+  form: {
+    width: "100%",
+    marginTop: theme.spacing(1),
+  },
+  submit: {
+    margin: theme.spacing(3, 0, 2),
+  },
+}));
+
 const Auth: React.FC = () => {
+  //   const classes = useStyles();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,6 +84,22 @@ const Auth: React.FC = () => {
   const [username, setUsername] = useState("");
   // JSのFileオブジェクト
   const [avatarImage, setAvatarImage] = useState<File | null>(null);
+
+  const [openModal, setOpenModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+
+  //   const sendResetEmail = async (e: React.MouseEvent<HTMLElement>) => {
+  //     await auth
+  //       .sendPasswordResetEmail(resetEmail)
+  //       .then(() => {
+  //         setOpenModal(false);
+  //         setResetEmail("");
+  //       })
+  //       .catch((err) => {
+  //         alert(err.message);
+  //         setResetEmail("");
+  //       });
+  //   };
 
   const onChangeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // [0] .. 画像1枚だけ取得！
@@ -231,7 +302,12 @@ const Auth: React.FC = () => {
 
               <Grid container>
                 <Grid item xs>
-                  <span className={styles.login_reset}>Forgot Password</span>
+                  <span
+                    className={styles.login_reset}
+                    onClick={() => setOpenModal(true)}
+                  >
+                    Forgot Password
+                  </span>
                 </Grid>
                 <Grid item>
                   <span
@@ -250,6 +326,27 @@ const Auth: React.FC = () => {
               >
                 Sign In With Google
               </Button>
+              {/* <Modal open={openModal} onClose={() => setOpenModal(false)}>
+                <div style={getModalStyle()}>
+                  <div className={styles.login_modal}>
+                    <TextField
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      type="email"
+                      name="email"
+                      label="Reset Email"
+                      value={resetEmail}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setResetEmail(e.target.value);
+                      }}
+                    />
+                    <IconButton onClick={sendResetEmail}>
+                      <SendIcon />
+                    </IconButton>
+                  </div>
+                </div>
+              </Modal> */}
             </Box>
           </Box>
         </Grid>
